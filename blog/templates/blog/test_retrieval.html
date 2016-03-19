@@ -1,0 +1,26 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<body>
+<script src="//d3js.org/d3.v3.min.js"></script>
+
+    <div style="border: black; font-size:12px; width:400px">
+    	<span ><br/><br/>
+    	Test Page. 
+    	<br/> </span>
+    </div>
+    <div><p>This ought to spit some shit out...</p></div>
+    
+    {% for ret in retrieval %}
+    <div>
+    	{{ ret.line_name }}
+    </div>
+    {% endfor %}
+    
+	<script>
+		var tst = d3.json("{% url "legend_data" %}");
+		console.log(tst);
+	</script>
+</body>
+</html>
