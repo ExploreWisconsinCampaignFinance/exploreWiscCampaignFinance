@@ -2,9 +2,10 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
 from django.core import serializers
-from .models import Post, LegendData, ContribSourcesByParty
+from .models import Post, LegendData, ContribSourcesByParty, ContributorData 
 from .forms import PostForm
 import json
+from datetime import date
 
 def post_list(request):
 	posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
@@ -66,6 +67,27 @@ def contrib_sources_data(request):
 def test_retrieval(request):
 	objs = LegendData.objects.all()
 	return render(request, "blog/test_retrieval.html", {"retrieval": objs})
-
+	
+def contributor_data(request):
+	
+	qryst = ContributorData.objects.filter(
+		candidate='"Cates, Dick"'
+	).filter(
+		date__gte=date(2012,11,6) 
+	).filter(
+		date__lte=date(2014,11,4) 
+	).order_by(
+	 	"date"
+	)
+	
+	cumulative = 0
+	data = list(qryst.values("candidate", "date", "cumulative", "amount", "contributor"))
+	for i, dat in enumerate(data):
+		cumulative += dat["amount"]
+		dat["cumulative"] = cumulative
+	
+	return JsonResponse(data, safe=False)
+	
+	
 
 

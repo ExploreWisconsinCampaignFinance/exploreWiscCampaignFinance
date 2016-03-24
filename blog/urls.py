@@ -12,4 +12,5 @@ urlpatterns = [
     url(r'^contrib_sources_by_party$', views.contrib_sources_by_party, name="contrib_sources_by_party"),
     url(r'^test$', views.test_retrieval, name="test_retrieval"),
     url(r'^data_contrib_sources_by_party$', views.contrib_sources_data, name="contrib_sources_data"),
+    url(r'^contributor_data', views.contributor_data, name="contributor_data")
 ]

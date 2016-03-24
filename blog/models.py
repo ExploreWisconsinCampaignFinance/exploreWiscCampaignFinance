@@ -57,11 +57,13 @@ class ContributorData(models.Model):
 	employer = models.CharField(max_length=200)
 	interest_category = models.CharField(max_length=200)
 	amount = models.FloatField()
+	cumulative = models.FloatField(default=0)
 	
 	def __str__(self):
 		return self.contributor
 
-
+		
+	
 	
 
 
