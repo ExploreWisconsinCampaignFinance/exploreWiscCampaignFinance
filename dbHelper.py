@@ -16,6 +16,7 @@ emp = "employer"
 int_cat = "interest_category"
 amt = "amount"
 id_fld = "id"
+cum = "cumulative"
 
 cont_name = "blog_contributordata"
 cont_data = os.path.expanduser("~") + \
@@ -24,25 +25,27 @@ cont_data = os.path.expanduser("~") + \
 
 
 f = open(cont_data, "rb")
-field_string = "INSERT INTO {tn} ({dte}, {cand}, {cont}, {c_s_z}, {emp}, {int_cat}, {amt}) VALUES "
-val_string = "(DATE('{dte_val}'), '{cand_val}', '{cont_val}', '{c_s_z_val}', '{emp_val}', '{int_cat_val}', {amt_val})"
+field_string = "INSERT INTO {tn} ({dte}, {cand}, {cont}, {c_s_z}, {emp}, {int_cat}, {amt}, {cum}) VALUES "
+val_string = "(DATE('{dte_val}'), '{cand_val}', '{cont_val}', '{c_s_z_val}', '{emp_val}', '{int_cat_val}', {amt_val}, {cum_val})"
 exec_string = field_string + val_string
 
 for i, line in enumerate(f):
 	if i == 0: continue
 	if i % 1000 == 0: print "Record:", i
 	line = line.replace("\n", "")
-	line = line.replace("'", "")
+	
+	line = line.replace("'", "").replace('"', "")
 	flds = line.split("\t")
 	ready = exec_string.format(tn=cont_name, \
-		dte=dte, cand=cand, cont=cont, c_s_z=c_s_z, emp=emp, int_cat=int_cat, amt=amt, \
+		dte=dte, cand=cand, cont=cont, c_s_z=c_s_z, emp=emp, int_cat=int_cat, amt=amt, cum=cum, \
 		dte_val=flds[0], \
 		cand_val=flds[1], \
 		cont_val=flds[2], \
 		c_s_z_val=flds[3], \
 		emp_val=flds[4], \
 		int_cat_val=flds[5], \
-		amt_val=flds[6])
+		amt_val=flds[6], \
+		cum_val=0)
 	
 	c.execute(ready)
 
@@ -71,7 +74,7 @@ for i, line in enumerate(f):
 	if i == 0: continue
 	if i % 20 == 0: print "Record:", i
 	line = line.replace("\n", "")
-	line = line.replace("'", "")
+	line = line.replace("'", "").replace('"', "")
 	flds = line.split("\t")
 	ready = exec_string.format(tn=cand_name, \
 		hous=hous, dist=dist, party=party, year=year, won=won, cand=cand,\

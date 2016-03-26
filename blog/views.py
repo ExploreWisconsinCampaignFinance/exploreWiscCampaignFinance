@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
 from django.core import serializers
-from .models import Post, LegendData, ContribSourcesByParty, ContributorData 
+from .models import Post, LegendData, ContribSourcesByParty, ContributorData, CandidateData
 from .forms import PostForm
 import json
 from datetime import date
@@ -68,10 +68,11 @@ def test_retrieval(request):
 	objs = LegendData.objects.all()
 	return render(request, "blog/test_retrieval.html", {"retrieval": objs})
 	
-def contributor_data(request):
+def contributor_data(request, cand):
 	
+	#cand += cand.replace(",", ", ")
 	qryst = ContributorData.objects.filter(
-		candidate='"Cates, Dick"'
+		candidate=cand
 	).filter(
 		date__gte=date(2012,11,6) 
 	).filter(
@@ -88,6 +89,23 @@ def contributor_data(request):
 	
 	return JsonResponse(data, safe=False)
 	
+def candidate_data(request, house, year):
+	info = "Received: " + year
+	qryst = CandidateData.objects.filter(
+		house=house
+	).filter(
+		year_ran__year=year
+	).order_by(
+	 	"year_ran"
+	)
+	data = list(qryst.values("candidate", "year_ran", "party", "house", "district", "won"))
 	
-
+	return JsonResponse(data, safe=False)
+	
+def index(request):
+	return render(request, "blog/index.html", {})
+	
+	
+def legislative_contributions(request):
+	return render(request, "blog/legislative_contributions.html", {})
 
