@@ -56,208 +56,23 @@
 	    .tick{
 	    	font-size:14px;
 	    }
+	    
+	    .Republican {
+			stroke:#cb181d;
+			fill:#cb181d;
+			background-color:#cb181d;
+		}
+		.Democrat {
+			stroke:#2171b5;
+			fill:#2171b5;
+			background-color:#2171b5;
+		}
     </style>
     <link rel="stylesheet" type="text/css" href="{% static 'css/colours.css' %}" />
     <script>
     
-		var time_scale;
-		var percent_scale;
-		var tst = d3.tsv("{% static 'data/asm_leadership.tsv' %}");
-		console.log("Hey!")
-		console.log(tst)
-		function get_timeseries_data(d,i){
-		    // get the id of the current element
-		    var id = d.line_id
-		    console.log("ID: " + id)
-		    // see if we have an associated time series
-		    var ts = d3.select('#'+id)
-		    // toggle
-		    if (ts.empty()){
-		        //d3.tsv('data/asm_leadership.tsv', function(data){
-		        d3.tsv("{% static 'data/asm_leadership.tsv' %}", function(data){
-		            filtered_data = data.filter(function(d){return d.Candidate === id});
-		            draw_timeseries(filtered_data, id)
-		        })
-		    } else {
-		        ts.remove()
-		    }
-		}
-		var parseDate = d3.time.format("%Y-%m-%d").parse;
-		function add_label(circle, d, i){
-		    d3.select(circle)
-		        .transition()
-		        .attr('r', 9)
-		    
-		    d3.select('#' + d.Candidate).append('text')
-		        .text(d.Candidate)
-		        .attr('text-anchor','middle')
-		        .style("dominant-baseline","central")
-		        .attr('x', time_scale(parseDate(d.DATE))-50)
-		        .attr('y', percent_scale(d.Cumulative))
-		        .attr('class','linelabel')
-		        .style('opacity',0)
-		        .style('fill','grey')
-		        .transition()
-		            .style('opacity',1)        
-		}
-		
-		function draw_timeseries(data, id){
-		    
-		    var line = d3.svg.line()
-		        .x(function(d){return time_scale(parseDate(d.DATE))})
-		        .y(function(d){return percent_scale(d.Cumulative)})
-		        .interpolate("linear")
-		    
-		    var g = d3.select('#chart')
-		        .append('g')
-		        .attr('id', id)
-		        .attr('class', 'timeseries ' + id)
-		    
-		    g.append('path')
-		        .attr('d', line(data))
-		        //.attr("stroke", "#FF6319")
-		    
-		    g.selectAll('circle')
-		        .data(data)
-		        .enter()
-		        .append("circle")
-		        .attr('cx', function(d) {return time_scale(parseDate(d.DATE))})
-		        .attr('cy', function(d) {return percent_scale(d.Cumulative)})
-		        .attr('r',0)
-		            
-		    var enter_duration = 1000;
-		    
-		    g.selectAll('circle')
-		        .transition()
-		        .delay(function(d, i) { return i / data.length * enter_duration; })
-		        .attr('r', 5)
-		        .each('end',function(d,i){
-		            if (i === data.length-1){
-		                add_label(this,d)
-		            }
-		        })
-		        
-		    
-		    g.selectAll('circle')
-		        .on('mouseover', function(d){
-		            d3.select(this)
-		                .transition().attr('r', 9)
-		        })
-		        .on('mouseout', function(d,i){
-		            if (i !== data.length-1) {
-		                d3.select(this).transition().attr('r', 5)
-		            }
-		        })
-		    
-		    g.selectAll('circle')
-		        .on('mouseover.tooltip', function(d){
-		        	//console.log(d.Candidate + " on")
-		            d3.select("text." + d.Candidate).remove()
-		            d3.select('#chart')
-		                .append('text')
-		                .text(d.ContributorName + ": $" + d.Amount)
-		                .attr('x', function() {
-		                	if (parseDate(d.DATE) > parseDate("2014-04-01")) {
-		                		return time_scale(parseDate(d.DATE)) - 300
-		                	} else {
-		                		return time_scale(parseDate(d.DATE)) + 10
-		                	}
-		                })
-		                .attr('y', percent_scale(d.Cumulative) - 10)
-		                .attr('class', d.Candidate)
-		        })
-		        .on('mouseout.tooltip', function(d){
-		         	//console.log(d.Candidate + " off")
-		            d3.select("text." + d.Candidate)
-		            	.remove()
-		                //.transition()
-		                //.duration(500)
-		                //.style('opacity',0)
-		                //.attr('transform','translate(10, -10)')
-		                //.remove()
-		        })
-		}
 		
 		
-		
-		function draw(data) {
-		    "use strict";
-		    
-		    // set up the viewport, the scales, and axis generators
-		    var parseDate = d3.time.format("%Y-%m-%d").parse;
-		    var container_dimensions = {width: 900, height: 400},
-		        margins = {top: 10, right: 20, bottom: 30, left: 90},
-		        chart_dimensions = {
-		            width: container_dimensions.width - margins.left - margins.right,
-		            height: container_dimensions.height - margins.top - margins.bottom
-		        };
-		        
-		    time_scale = d3.time.scale()
-		        .range([0, chart_dimensions.width])
-		        .domain([parseDate("2012-11-07"), parseDate("2014-11-04")]);
-		    
-		    percent_scale = d3.scale.linear()
-		        .range([chart_dimensions.height, 0])
-		        .domain([100, 120000]);
-		    
-		    var time_axis = d3.svg.axis()
-		        .scale(time_scale)
-		    
-		    var count_axis = d3.svg.axis()
-		        .scale(percent_scale)
-		        .orient("left");
-		    
-		    // draw axes
-		    
-		    var g = d3.select('#timeseries')
-		      .append('svg')
-		        .attr("width", container_dimensions.width)
-		        .attr("height", container_dimensions.height)
-		      .append("g")
-		        .attr("transform", "translate(" + margins.left + "," + margins.top + ")")
-		        .attr("id","chart");
-		    
-		    g.append("g")
-		      .attr("class", "x axis")
-		      .attr("transform", "translate(0," + chart_dimensions.height + ")")
-		      .call(time_axis);
-		     
-		    g.append("g")
-		      .attr("class", "y axis")
-		      .call(count_axis);
-		    
-		  // draw the y-axis label
-		    
-		    d3.select('.y.axis')
-		        .append('text')
-		        .text('Money Raised')
-		        .attr('transform', "rotate (-90, 0, 0)")
-		        .attr('x', -200)
-		        .attr('y', -75);
-		    
-		    // draw the key
-		    
-		    var key_items = d3.select('#key')
-		      .selectAll('div')
-		      .data(data)
-		      .enter()
-		      .append('div')
-		        .attr('class','key_line')
-		        .attr('id',function(d){return d.line_id+"_key"})
-		        .attr("title", "Click on a name to show the cumulative contributions")
-		        
-		    key_items.append('div')
-		        .attr('id', function(d){return 'key_square_' + d.line_id})
-		        .attr('class', function(d){return 'key_square ' + d.line_id})
-		    
-		    key_items.append('div')
-		        .attr('class','key_label')
-		        .text(function(d){return d.line_name})
-		    
-		    d3.selectAll('.key_line')
-		        .on('click', get_timeseries_data)
-		    
-		}
     </script>
 </head>
 <body>
@@ -266,13 +81,8 @@
     
     
     <script>
-        //d3.json('data/campaign_legend.json', draw);
-        //d3.json("{% static 'data/campaign_legend.json' %}", draw);
-        //var tst = "{% url 'legend_data' %}"
-        
-        //var tst = "{% url 'legend_data' %}";
-        //console.log("Is of type: " + typeof("{% url 'legend_data' %}"));
-        d3.json("{% url "legend_data" %}", draw);
+
+        //d3.json("{% url "legend_data" %}", draw);
     </script>
     <div style="border: black; font-size:12px; width:400px">
     	
@@ -289,7 +99,10 @@
 
 <script>
 	var cand_data;
-	$.getJSON("{% url 'candidate_data' 'Senate' '2014' %}", function(json) {
+	var cont_data = [];
+	var maxVal = 0;
+	
+	$.getJSON("{% url 'candidate_data' 'Assembly' '2014' %}", function(json) {
 		cand_data = json;
 		var p_opts = '<option>';
 		var s_opts = '</option>';
@@ -300,21 +113,273 @@
 			var year_opt = p_opts + fb.year_ran.substring(0, 4) + s_opts;
 			if (dists.indexOf(dist_opt) < 0){ dists += dist_opt; }
 			if (years.indexOf(year_opt) < 0){ years += year_opt; }
-    	});
-    	$("#sel_district").html(dists);
-    	$("#sel_year").html(years);    	
+		});
+		$("#sel_district").html(dists);
+		$("#sel_year").html(years);
+
 	})
-	
+
 	$("#sel_district").change(function() {
+
+		//Remember to remove the previous graph
 		var distNum = $(this).val();
-		var cand_names = [];
-		$.each(cand_data, function(i, fb) {
-			if (fb.district == distNum){
-			//Maybe here appropriate the legend function
-			//	from above draw the data
-				cand_names[cand_names.length] = fb;
-			}
-		})
+		var camp_data = [];
+
+		//constructing the data for the legend
+		var leg_data = [];
 		
+		//Go through each candidate who ran
+		//	searching for the matching district 
+		$.each(cand_data, function(i, fb) {
+			if (fb.district != distNum){
+				return;
+			}
+			console.log(fb.candidate)
+			if (fb.candidate == "None, None"){ 
+				return; 
+			}
+			//Collect campaign data for who won, party, etc
+			camp_data[camp_data.length] = fb;
+			var splt = fb.candidate.split(",");
+			var obj = {};
+			//Break into key name and display name
+			obj["line_id"] = fb.candidate;
+			obj["line_name"] = splt[splt.length-1] + " " + splt[0];
+			obj["party"] = fb.party;
+			obj["won"] = fb.won;
+			leg_data.push(obj);
+
+			//for (var i=0; i<leg_data.length; i++){
+
+				//cont_data[i]
+				//console.log(leg_data[i])
+				//draw_timeseries(leg_data[i], "test")
+			//}
+		})
+		//Collect contributor data from url and store it
+
+		for (var i=0; i<leg_data.length; i++){
+			var cand_name = leg_data[i].line_id
+			var theurl = "/contributor_data/" + cand_name + "/2014";
+			
+			var jsonOutData;
+			
+			var ajaxOpts = {
+				async: false,
+				dataType: "json",
+				success: function(data) { jsonOutData = data; }
+				};
+			
+			
+			$.ajax(theurl, ajaxOpts);
+			
+			//console.log(jsonOutData);
+			cont_data.push(jsonOutData)
+			/*
+			 {
+				console.log(data);
+				var items = [];
+				$.each(data, function(key,val) {
+					items.push[{key:val}]
+				})
+
+				cont_data.push({cand_name:items});
+			})
+			
+			console.log("length after " + cand_name)
+			console.log(cont_data.length) */
+			
+		}
+		//console.log(cont_data[0])
+		console.log("Max val is " + findMaxVal(cont_data));
+
+		
+		// set up the viewport, the scales, and axis generators
+		var time_scale;
+		var percent_scale;
+		var parseDate = d3.time.format("%Y-%m-%d").parse;
+		var container_dimensions = {width: 900, height: 400},
+			margins = {top: 10, right: 20, bottom: 30, left: 90},
+			chart_dimensions = {
+				width: container_dimensions.width - margins.left - margins.right,
+				height: container_dimensions.height - margins.top - margins.bottom
+			};
+		
+		time_scale = d3.time.scale()
+			.range([0, chart_dimensions.width])
+			.domain([parseDate("2012-11-07"), parseDate("2014-11-04")]);
+		
+		//Change domain here
+		percent_scale = d3.scale.linear()
+			.range([chart_dimensions.height, 0])
+			.domain([100, 120000]);
+
+		var time_axis = d3.svg.axis()
+			.scale(time_scale)
+
+		var count_axis = d3.svg.axis()
+			.scale(percent_scale)
+			.orient("left");
+
+		// draw axes
+		var g = d3.select('#timeseries')
+		  .append('svg')
+			.attr("width", container_dimensions.width)
+			.attr("height", container_dimensions.height)
+		  .append("g")
+			.attr("transform", "translate(" + margins.left + "," + margins.top + ")")
+			.attr("id","chart");
+
+		g.append("g")
+		  .attr("class", "x axis")
+		  .attr("transform", "translate(0," + chart_dimensions.height + ")")
+		  .call(time_axis);
+		 
+		g.append("g")
+		  .attr("class", "y axis")
+		  .call(count_axis);
+
+		// draw the y-axis label
+		d3.select('.y.axis')
+			.append('text')
+			.text('Money Raised')
+			.attr('transform', "rotate (-90, 0, 0)")
+			.attr('x', -200)
+			.attr('y', -75);
+			
+		// draw the key
+		var key_items = d3.select('#key')
+		  .selectAll('div')
+		  .data(leg_data)
+		  .enter()
+		  .append('div')
+			.attr('class','key_line')
+			.attr('id',function(d){return d.line_id+"_key"})
+			.attr("title", "Click on a name to show the cumulative contributions")
+		
+		key_items.append('div')
+			.attr('id', function(d){return 'key_square_' + d.line_id})
+			.attr('class', function(d){return 'key_square ' + d.line_id + " " + d.party})
+
+		key_items.append('div')
+			.attr('class','key_label')
+			.text(function(d){return d.line_name})
+		//console.log("DRAW: " + cont_data.length)
+		for (var i=0; i<cont_data.length; i++){
+			
+			//cont_data[i]
+			draw_timeseries(cont_data[i], "test")
+		}
+	
 	})
+	// The graphing...
+	var findMaxVal = function(datArray){
+		var maxVal = 0;
+		for (var i=0; i<datArray.length; i++){
+			var lst = datArray[i].length
+			if (datArray[i][lst-1].cumulative > maxVal){
+				maxVal = datArray[i][lst-1].cumulative;
+			}
+		}
+		return maxVal;
+	}
+	
+	var parseDate = d3.time.format("%Y-%m-%d").parse;
+	function add_label(circle, d, i){
+		d3.select(circle)
+			.transition()
+			.attr('r', 9)
+
+		d3.select('#' + d.candidate).append('text')
+			.text(d.candidate)
+			.attr('text-anchor','middle')
+			.style("dominant-baseline","central")
+			.attr('x', time_scale(parseDate(d.date))-50)
+			.attr('y', percent_scale(d.cumulative))
+			.attr('class','linelabel')
+			.style('opacity',0)
+			.style('fill','grey')
+			.transition()
+				.style('opacity',1)        
+	}
+
+	function draw_timeseries(data, id){
+		var line = d3.svg.line()
+			.x(function(d){return time_scale(parseDate(d.date))})
+			.y(function(d){return percent_scale(d.cumulative)})
+			.interpolate("linear")
+
+		var g = d3.select('#chart')
+			.append('g')
+			.attr('id', id)
+			.attr('class', 'timeseries ' + id)
+
+		g.append('path')
+			.attr('d', line(data))
+			//.attr("stroke", "#FF6319")
+
+		g.selectAll('circle')
+			.data(data)
+			.enter()
+			.append("circle")
+			.attr('cx', function(d) {return time_scale(parseDate(d.date))})
+			.attr('cy', function(d) {return percent_scale(d.cumulative)})
+			.attr('r',0)
+
+		var enter_duration = 1000;
+
+		g.selectAll('circle')
+			.transition()
+			.delay(function(d, i) { return i / data.length * enter_duration; })
+			.attr('r', 5)
+			.each('end',function(d,i){
+				if (i === data.length-1){
+					add_label(this,d)
+				}
+			})
+
+		g.selectAll('circle')
+			.on('mouseover', function(d){
+				d3.select(this)
+					.transition().attr('r', 9)
+			})
+			.on('mouseout', function(d,i){
+				if (i !== data.length-1) {
+					d3.select(this).transition().attr('r', 5)
+				}
+			})
+
+		g.selectAll('circle')
+			.on('mouseover.tooltip', function(d){
+				//console.log(d.Candidate + " on")
+				d3.select("text." + d.candidate).remove()
+				d3.select('#chart')
+					.append('text')
+					.text(d.contributor + ": $" + d.amount)
+					.attr('x', function() {
+						if (parseDate(d.date) > parseDate("2014-04-01")) {
+							return time_scale(parseDate(d.date)) - 300
+						} else {
+							return time_scale(parseDate(d.date)) + 10
+						}
+					})
+					.attr('y', percent_scale(d.cumulative) - 10)
+					.attr('class', d.candidate)
+			})
+			.on('mouseout.tooltip', function(d){
+				//console.log(d.Candidate + " off")
+				d3.select("text." + d.candidate)
+					.remove()
+					//.transition()
+					//.duration(500)
+					//.style('opacity',0)
+					//.attr('transform','translate(10, -10)')
+					//.remove()
+			})
+	}
+
 </script>
+
+
+
+

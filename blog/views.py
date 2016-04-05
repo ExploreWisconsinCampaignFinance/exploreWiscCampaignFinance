@@ -68,15 +68,19 @@ def test_retrieval(request):
 	objs = LegendData.objects.all()
 	return render(request, "blog/test_retrieval.html", {"retrieval": objs})
 	
-def contributor_data(request, cand):
+def contributor_data(request, cand, year):
+
+	if year == "2014":
+		frm_date = date(2012,11,6)
+		to_date = date(2014, 11, 4)
 	
 	#cand += cand.replace(",", ", ")
 	qryst = ContributorData.objects.filter(
 		candidate=cand
 	).filter(
-		date__gte=date(2012,11,6) 
+		date__gte=frm_date
 	).filter(
-		date__lte=date(2014,11,4) 
+		date__lte=to_date
 	).order_by(
 	 	"date"
 	)
@@ -99,7 +103,6 @@ def candidate_data(request, house, year):
 	 	"year_ran"
 	)
 	data = list(qryst.values("candidate", "year_ran", "party", "house", "district", "won"))
-	
 	return JsonResponse(data, safe=False)
 	
 def index(request):
