@@ -112,3 +112,9 @@ def index(request):
 def legislative_contributions(request):
 	return render(request, "blog/legislative_contributions.html", {})
 
+def test_contrib(request):
+	return render(request, "blog/test_contrib.html", {})
+
+
+
+

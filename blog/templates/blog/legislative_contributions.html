@@ -98,6 +98,86 @@
 </html>
 
 <script>
+	//All constant chart stuff\\
+	// set up the viewport, the scales, and axis generators
+	var time_scale;
+	var percent_scale;
+	var parseDate = d3.time.format("%Y-%m-%d").parse;
+	var container_dimensions = {width: 900, height: 400},
+		margins = {top: 10, right: 20, bottom: 30, left: 90},
+		chart_dimensions = {
+			width: container_dimensions.width - margins.left - margins.right,
+			height: container_dimensions.height - margins.top - margins.bottom
+		};
+
+	time_scale = d3.time.scale()
+		.range([0, chart_dimensions.width])
+		.domain([parseDate("2012-11-07"), parseDate("2014-11-04")]);
+
+	//Change domain here
+	percent_scale = d3.scale.linear()
+		.range([chart_dimensions.height, 0])
+		.domain([100, 120000]);
+
+	var time_axis = d3.svg.axis()
+		.scale(time_scale)
+
+	var count_axis = d3.svg.axis()
+		.scale(percent_scale)
+		.orient("left");
+
+	// draw axes
+	var g = d3.select('#timeseries')
+	  .append('svg')
+		.attr("width", container_dimensions.width)
+		.attr("height", container_dimensions.height)
+	  .append("g")
+		.attr("transform", "translate(" + margins.left + "," + margins.top + ")")
+		.attr("id","chart");
+
+	g.append("g")
+	  .attr("class", "x axis")
+	  .attr("transform", "translate(0," + chart_dimensions.height + ")")
+	  .call(time_axis);
+
+	g.append("g")
+	  .attr("class", "y axis")
+	  .call(count_axis);
+
+	// draw the y-axis label
+	d3.select('.y.axis')
+		.append('text')
+		.text('Money Raised')
+		.attr('transform', "rotate (-90, 0, 0)")
+		.attr('x', -200)
+		.attr('y', -75);
+			
+	function rescale(maxYValue) {
+		percent_scale.domain([0,maxYValue])  // change scale to 0, to between 10 and 100
+		g.select(".y.axis")
+			.transition().duration(1500).ease("sin-in-out")  // https://github.com/mbostock/d3/wiki/Transitions#wiki-d3_ease
+			.call(count_axis);  
+	}
+	var findMaxVal = function(datArray){
+		var maxVal = 0;
+		for (var i=0; i<datArray.length; i++){
+			var lst = datArray[i].length
+			if (datArray[i][lst-1].cumulative > maxVal){
+				maxVal = datArray[i][lst-1].cumulative;
+			}
+		}
+		return maxVal;
+	}
+	//dat is a json object, that fed into draw timeseries
+	var findPartyColors = function(party){
+		if (party == "Democrat"){ return "#084594" }
+		if (party == "Republican"){ return "#cb181d" }
+		if (party == "Libertarian"){ return "#ffff33" }
+		if (party == "Independent"){ return "#a65628" }
+	}
+</script>
+
+<script>
 	var cand_data;
 	var cont_data = [];
 	var maxVal = 0;
@@ -123,8 +203,6 @@
 
 		//Remember to remove the previous graph
 		var distNum = $(this).val();
-		var camp_data = [];
-
 		//constructing the data for the legend
 		var leg_data = [];
 		
@@ -139,7 +217,6 @@
 				return; 
 			}
 			//Collect campaign data for who won, party, etc
-			camp_data[camp_data.length] = fb;
 			var splt = fb.candidate.split(",");
 			var obj = {};
 			//Break into key name and display name
@@ -148,16 +225,8 @@
 			obj["party"] = fb.party;
 			obj["won"] = fb.won;
 			leg_data.push(obj);
-
-			//for (var i=0; i<leg_data.length; i++){
-
-				//cont_data[i]
-				//console.log(leg_data[i])
-				//draw_timeseries(leg_data[i], "test")
-			//}
 		})
 		//Collect contributor data from url and store it
-
 		for (var i=0; i<leg_data.length; i++){
 			var cand_name = leg_data[i].line_id
 			var theurl = "/contributor_data/" + cand_name + "/2014";
@@ -172,81 +241,18 @@
 			
 			
 			$.ajax(theurl, ajaxOpts);
+			var ts = d3.select('#drawnTimeSeries')
+		    // toggle
+			d3.select(".timeseries #drawnTimeSeries").remove()
+			ts.remove()
+			draw_timeseries(jsonOutData, '#drawnTimeSeries', leg_data[i].party)
 			
-			//console.log(jsonOutData);
 			cont_data.push(jsonOutData)
-			/*
-			 {
-				console.log(data);
-				var items = [];
-				$.each(data, function(key,val) {
-					items.push[{key:val}]
-				})
-
-				cont_data.push({cand_name:items});
-			})
-			
-			console.log("length after " + cand_name)
-			console.log(cont_data.length) */
-			
 		}
 		//console.log(cont_data[0])
 		console.log("Max val is " + findMaxVal(cont_data));
-
-		
-		// set up the viewport, the scales, and axis generators
-		var time_scale;
-		var percent_scale;
-		var parseDate = d3.time.format("%Y-%m-%d").parse;
-		var container_dimensions = {width: 900, height: 400},
-			margins = {top: 10, right: 20, bottom: 30, left: 90},
-			chart_dimensions = {
-				width: container_dimensions.width - margins.left - margins.right,
-				height: container_dimensions.height - margins.top - margins.bottom
-			};
-		
-		time_scale = d3.time.scale()
-			.range([0, chart_dimensions.width])
-			.domain([parseDate("2012-11-07"), parseDate("2014-11-04")]);
-		
-		//Change domain here
-		percent_scale = d3.scale.linear()
-			.range([chart_dimensions.height, 0])
-			.domain([100, 120000]);
-
-		var time_axis = d3.svg.axis()
-			.scale(time_scale)
-
-		var count_axis = d3.svg.axis()
-			.scale(percent_scale)
-			.orient("left");
-
-		// draw axes
-		var g = d3.select('#timeseries')
-		  .append('svg')
-			.attr("width", container_dimensions.width)
-			.attr("height", container_dimensions.height)
-		  .append("g")
-			.attr("transform", "translate(" + margins.left + "," + margins.top + ")")
-			.attr("id","chart");
-
-		g.append("g")
-		  .attr("class", "x axis")
-		  .attr("transform", "translate(0," + chart_dimensions.height + ")")
-		  .call(time_axis);
-		 
-		g.append("g")
-		  .attr("class", "y axis")
-		  .call(count_axis);
-
-		// draw the y-axis label
-		d3.select('.y.axis')
-			.append('text')
-			.text('Money Raised')
-			.attr('transform', "rotate (-90, 0, 0)")
-			.attr('x', -200)
-			.attr('y', -75);
-			
+		rescale(findMaxVal(cont_data))
+		console.log(leg_data)
 		// draw the key
 		var key_items = d3.select('#key')
 		  .selectAll('div')
@@ -255,7 +261,6 @@
 		  .append('div')
 			.attr('class','key_line')
 			.attr('id',function(d){return d.line_id+"_key"})
-			.attr("title", "Click on a name to show the cumulative contributions")
 		
 		key_items.append('div')
 			.attr('id', function(d){return 'key_square_' + d.line_id})
@@ -265,25 +270,14 @@
 			.attr('class','key_label')
 			.text(function(d){return d.line_name})
 		//console.log("DRAW: " + cont_data.length)
-		for (var i=0; i<cont_data.length; i++){
-			
-			//cont_data[i]
-			draw_timeseries(cont_data[i], "test")
-		}
+		//for (var i=0; i<cont_data.length; i++){
+		//	
+		//	leg_data[cont_data[i][0].candidate].
+		//	draw_timeseries(cont_data[i], "test")
+		//}
 	
 	})
 	// The graphing...
-	var findMaxVal = function(datArray){
-		var maxVal = 0;
-		for (var i=0; i<datArray.length; i++){
-			var lst = datArray[i].length
-			if (datArray[i][lst-1].cumulative > maxVal){
-				maxVal = datArray[i][lst-1].cumulative;
-			}
-		}
-		return maxVal;
-	}
-	
 	var parseDate = d3.time.format("%Y-%m-%d").parse;
 	function add_label(circle, d, i){
 		d3.select(circle)
@@ -300,11 +294,11 @@
 			.style('opacity',0)
 			.style('fill','grey')
 			.transition()
-				.style('opacity',1)        
+				.style('opacity',1)
 	}
 
-	function draw_timeseries(data, id){
-		var line = d3.svg.line()
+	function draw_timeseries(data, id, party){
+		var lineGen = d3.svg.line()
 			.x(function(d){return time_scale(parseDate(d.date))})
 			.y(function(d){return percent_scale(d.cumulative)})
 			.interpolate("linear")
@@ -315,8 +309,8 @@
 			.attr('class', 'timeseries ' + id)
 
 		g.append('path')
-			.attr('d', line(data))
-			//.attr("stroke", "#FF6319")
+			.attr('d', lineGen(data))
+			.attr("stroke", findPartyColors(party))
 
 		g.selectAll('circle')
 			.data(data)
@@ -325,6 +319,7 @@
 			.attr('cx', function(d) {return time_scale(parseDate(d.date))})
 			.attr('cy', function(d) {return percent_scale(d.cumulative)})
 			.attr('r',0)
+			.attr("fill", findPartyColors(party))
 
 		var enter_duration = 1000;
 
@@ -351,7 +346,7 @@
 
 		g.selectAll('circle')
 			.on('mouseover.tooltip', function(d){
-				//console.log(d.Candidate + " on")
+				//console.log(d.candidate + " on")
 				d3.select("text." + d.candidate).remove()
 				d3.select('#chart')
 					.append('text')
@@ -367,7 +362,7 @@
 					.attr('class', d.candidate)
 			})
 			.on('mouseout.tooltip', function(d){
-				//console.log(d.Candidate + " off")
+				//console.log(d.candidate + " off")
 				d3.select("text." + d.candidate)
 					.remove()
 					//.transition()
