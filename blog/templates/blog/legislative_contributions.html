@@ -67,6 +67,22 @@
 			fill:#2171b5;
 			background-color:#2171b5;
 		}
+		.Libertarian {
+			stroke:#ff7f00;
+			fill:#ff7f00;
+			background-color:#ff7f00;
+		}
+		.Independent {
+			stroke:#a65628;
+			fill:#a65628;
+			background-color:#a65628;
+		}
+		.WisconsinPirate {
+			stroke:#756bb1;
+			fill:#756bb1;
+			background-color:#756bb1;
+		}
+		
     </style>
     <link rel="stylesheet" type="text/css" href="{% static 'css/colours.css' %}" />
     <script>
@@ -79,19 +95,21 @@
     <div id="timeseries"></div>
     <div id="key"></div>
     
-    
     <script>
 
         //d3.json("{% url "legend_data" %}", draw);
     </script>
     <div style="border: black; font-size:12px; width:400px">
     	
+    <p>
+		<input type="radio" name="house" id="house_asm" value="Assembly" checked> Assembly <br>
+		<input type="radio" name="house" id="house_sen" value="Senate"> Senate
+    </p>
 	Select year: <select id="sel_year">
-	</select>
-	
-	<p>radio button for house</p>
+	</select> <br>
 	
 	Select district number <select id="sel_district">
+		<option>Select a District</option>
 	</select>
     </div>
 </body>
@@ -153,16 +171,21 @@
 		.attr('y', -75);
 			
 	function rescale(maxYValue) {
-		percent_scale.domain([0,maxYValue])  // change scale to 0, to between 10 and 100
+		percent_scale.domain([0, maxYValue])  // change scale to 0, to between 10 and 100
 		g.select(".y.axis")
 			.transition().duration(1500).ease("sin-in-out")  // https://github.com/mbostock/d3/wiki/Transitions#wiki-d3_ease
 			.call(count_axis);  
 	}
+	
 	var findMaxVal = function(datArray){
 		var maxVal = 0;
+		
 		for (var i=0; i<datArray.length; i++){
 			var lst = datArray[i].length
-			if (datArray[i][lst-1].cumulative > maxVal){
+			if (typeof datArray[i][lst-1] == 'undefined'){
+				continue;
+			} 
+			if (datArray[i][lst-1].cumulative > maxVal){				
 				maxVal = datArray[i][lst-1].cumulative;
 			}
 		}
@@ -172,9 +195,9 @@
 	var findPartyColors = function(party){
 		if (party == "Democrat"){ return "#084594" }
 		if (party == "Republican"){ return "#cb181d" }
-		if (party == "Libertarian"){ return "#ffff33" }
+		if (party == "Libertarian"){ return "#ff7f00" }
 		if (party == "Independent"){ return "#a65628" }
-		if (party == "Wisconsin Pirate"){return "756bb1" }
+		if (party == "WisconsinPirate"){return "#756bb1" }
 	}
 	
 	// The graphing...
@@ -263,7 +286,7 @@
 			})
 			.on('mouseout.tooltip', function(d){
 				//console.log(d.candidate + " off")
-				d3.select("text." + d.candidate.replace(" ", "."))
+				d3.select("text." + d.candidate.replace(/ /g, "."))
 					.remove()
 					//.transition()
 					//.duration(500)
@@ -277,32 +300,101 @@
 
 <script>
 	var cand_data;
+	var house = "Assembly";
+	var year = "2014";
 	
-	$.getJSON("{% url 'candidate_data' 'Assembly' '2014' %}", function(json) {
-		cand_data = json;
-		var p_opts = '<option>';
-		var s_opts = '</option>';
-		var years = "";
-		var dists = p_opts + "Select a District" + s_opts;
-		$.each(json, function (i, fb) {
-			var dist_opt = p_opts + fb.district + s_opts;
-			var year_opt = p_opts + fb.year_ran.substring(0, 4) + s_opts;
-			if (dists.indexOf(dist_opt) < 0){ dists += dist_opt; }
-			if (years.indexOf(year_opt) < 0){ years += year_opt; }
-		});
-		$("#sel_district").html(dists);
-		$("#sel_year").html(years);
+	
+	
+	$("#house_asm").change(function() {
+		check_house();
+	});
+	$("#house_sen").change(function() {
+		check_house();
+	});
+	
+	var check_house = function(){
+		if ($("#house_sen").is(':checked')){
+			house = "Senate";
+			//1099 to look for all records and pull years
+			//$.getJSON("{% url 'candidate_data' 'Senate' '1099' %}", function(json) {
+			{% url 'candidate_data' 'Senate' '1099' as grabYearURL %}
+		} else {
+			house = "Assembly";
+			{% url 'candidate_data' 'Assembly' '1099' as grabYearURL %}
+		}
+		
+		$.getJSON("{{ grabYearURL }}", function(json) {
+			var p_opts = '<option>';
+			var s_opts = '</option>';
+			var years = p_opts + "Select a year" + s_opts;
+			$.each(json, function (i, fb) {
+				var year_opt = p_opts + fb.year_ran.substring(0, 4) + s_opts;
+				if (years.indexOf(year_opt) < 0){ years += year_opt; }
+			});
+			$("#sel_year").html(years);
+		});		
+		console.log("House now equals: " + house);
+		
+	}
+	check_house();
+	$("#sel_year").change(function() {
+		//var yr = $(this).val();
+		year = $(this).val();
+		if (year == "Select a year") {return null}
 
-	})
+		var theurl = "/candidate_data/" + house + "/" + year;
+		console.log("gonna hit: " + theurl);
+	
+		var ajaxOpts = {
+			async: false,
+			dataType: "json",
+			success: function(data) { 
+				cand_data = data;
+				var p_opts = '<option>';
+				var s_opts = '</option>';
+				var dists = p_opts + "Select a District" + s_opts;
+				$.each(data, function (i, fb) {
+					var dist_opt = p_opts + fb.district + s_opts;
+					if (dists.indexOf(dist_opt) < 0){ dists += dist_opt; }
+				});
+				$("#sel_district").html(dists);	
+			}
+		};
+
+		$.ajax(theurl, ajaxOpts);
+		
+	});
+	
+	//var grabDistricts(yr)
+	
+	//this function should be fired on selection of year.
+	//With the years being populated when the house radio button is changed.
+	//$.getJSON("{% url 'candidate_data' 'Assembly' '2014' %}", function(json) {
+	
+	//	cand_data = json;
+	//	var p_opts = '<option>';
+	//	var s_opts = '</option>';
+	//	//var years = "";
+	//	var dists = p_opts + "Select a District" + s_opts;
+	//	$.each(json, function (i, fb) {
+	//		var dist_opt = p_opts + fb.district + s_opts;
+	//		//var year_opt = p_opts + fb.year_ran.substring(0, 4) + s_opts;
+	//		if (dists.indexOf(dist_opt) < 0){ dists += dist_opt; }
+	//		//if (years.indexOf(year_opt) < 0){ years += year_opt; }
+	//	});
+	//	$("#sel_district").html(dists);
+	//	//$("#sel_year").html(years);
+
+	//})
 
 	$("#sel_district").change(function() {
 		var cont_data = [];
 		var maxVal = 0;
 		if ($(this).val() == "Select a District") {return }
-		//Remember to remove the previous graph
-		var ts = d3.select('#drawnTimeSeries').remove()
-		var ts = d3.select('#drawnTimeSeries').remove()
-		var ts = d3.select('#drawnTimeSeries').remove()
+		//Remember to remove the previous graph		
+		$('.timeseries.drawnTimeSeries').remove();
+		$('.key_line').remove();
+		
 		var distNum = $(this).val();
 		//constructing the data for the legend
 		var leg_data = [];
@@ -323,38 +415,37 @@
 			//Break into key name and display name
 			obj["line_id"] = fb.candidate;
 			obj["line_name"] = splt[splt.length-1] + " " + splt[0];
-			obj["party"] = fb.party;
+			obj["party"] = fb.party.replace(" ", "");
 			obj["won"] = fb.won;
 			leg_data.push(obj);
 		})
 		//Collect contributor data from url and store it
 		for (var i=0; i<leg_data.length; i++){
 			var cand_name = leg_data[i].line_id
-			var theurl = "/contributor_data/" + cand_name + "/2014";
-			
+			var theurl = "/contributor_data/" + cand_name + "/" + year;
+			console.log("The url for contribu data: " + theurl);
 			var jsonOutData;
 			
 			var ajaxOpts = {
 				async: false,
 				dataType: "json",
 				success: function(data) { jsonOutData = data; }
-				};
-			
+			};
 			
 			$.ajax(theurl, ajaxOpts);
-			//this will probably need to come out and then get called after the rescale
-			draw_timeseries(jsonOutData, 'drawnTimeSeries', leg_data[i].party)
 			
 			cont_data.push(jsonOutData)
 		}
-		//console.log(cont_data[0])
 		console.log("Max val is " + findMaxVal(cont_data));
-		
-		
-		console.log(leg_data)
-		// draw the key
 
 		rescale(findMaxVal(cont_data))
+		for (var i=0; i<leg_data.length; i++){
+		
+			draw_timeseries(cont_data[i], 'drawnTimeSeries', leg_data[i].party)
+		
+		}
+		// drawing the key
+		
 		var key_items = d3.select('#key')
 		  .selectAll('div')
 		  .data(leg_data)
@@ -369,7 +460,13 @@
 
 		key_items.append('div')
 			.attr('class','key_label')
-			.text(function(d){return d.line_name})
+			.text(function(d){
+				if (d.won == 1){
+					return d.line_name + "*"
+				} else {
+					return d.line_name
+				}
+			})
 	
 
 	})
