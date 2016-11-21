@@ -6,6 +6,9 @@ os.chdir(os.path.expanduser("~") + \
 db_name = "db.sqlite3"
 conn = sqlite3.connect(db_name)
 c = conn.cursor()
+
+
+
 #### Populating ContributorData table
 ### field names
 dte = "date"
@@ -22,9 +25,21 @@ cont_name = "blog_contributordata"
 cont_data = os.path.expanduser("~") + \
 	"/Documents/campaign_finance/raw_data/contribution_data.tsv"
 
+#returns tuple with
+###(id, name, type, notnull, default_value, primary_key)
+c.execute('PRAGMA TABLE_INFO({})'.format(cont_name))
+
+for tup in c.fetchall(): print tup[1] + ": " + tup[2] 
+names = [tup[1] for tup in c.fetchall()]
+print names
 
 
-f = open(cont_data, "rb")
+
+c.execute("DELETE FROM " + cont_name)
+conn.commit()
+
+
+f = open(cont_data, "rt")
 field_string = "INSERT INTO {tn} ({dte}, {cand}, {cont}, {c_s_z}, {emp}, {int_cat}, {amt}, {cum}) VALUES "
 val_string = "(DATE('{dte_val}'), '{cand_val}', '{cont_val}', '{c_s_z_val}', '{emp_val}', '{int_cat_val}', {amt_val}, {cum_val})"
 exec_string = field_string + val_string
@@ -36,6 +51,8 @@ for i, line in enumerate(f):
 	
 	line = line.replace("'", "").replace('"', "")
 	flds = line.split("\t")
+	if (flds[6] == ''):
+		continue
 	ready = exec_string.format(tn=cont_name, \
 		dte=dte, cand=cand, cont=cont, c_s_z=c_s_z, emp=emp, int_cat=int_cat, amt=amt, cum=cum, \
 		dte_val=flds[0], \
@@ -54,7 +71,8 @@ conn.commit()
 
 #### Populating Candidate Table
 cand_name = "blog_candidatedata"
-
+c.execute("DELETE FROM " + cand_name)
+conn.commit()
 dist = "district" # models.IntegerField()
 cand = "candidate" # models.CharField(max_length=200)
 hous = "house" # models.CharField(max_length=200)
@@ -95,61 +113,61 @@ conn.close()
 
 
 ### Testing...
-val_string = "("
-	for j, fld in enumerate(flds):
-		if j == 0:
-			val_string += "DATE('" + fld + "'),"
-		elif j < 6:
-			val_string += "'" + fld + "',"
-		else:
-			val_string += str(fld) + ")"
+#val_string = "("
+#	for j, fld in enumerate(flds):
+#		if j == 0:
+#			val_string += "DATE('" + fld + "'),"
+#		elif j < 6:
+#			val_string += "'" + fld + "',"
+#		else:
+#			val_string += str(fld) + ")"
 	#print exec_string + val_string
 
 
 
-conn = sqlite3.connect(db_name)
-c = conn.cursor()
-c.execute("INSERT INTO {tn} \
-	({cand}, {cont}, {int_cat}, {emp}, {amt}, {c_s_z}, {dte}) \
-	VALUES \
-	('Bush', 'George Bush', 'Politics', 'None', 100000, 'Texax', DATE('2014-01-01'))".\
-	format(tn=cont_name, \
-		cand=cand, cont=cont, int_cat=int_cat, emp=emp, amt=amt, c_s_z=c_s_z, dte=dte))
-conn.commit()
-conn.close()
+#conn = sqlite3.connect(db_name)
+#c = conn.cursor()
+#c.execute("INSERT INTO {tn} \
+#	({cand}, {cont}, {int_cat}, {emp}, {amt}, {c_s_z}, {dte}) \
+#	VALUES \
+#	('Bush', 'George Bush', 'Politics', 'None', 100000, 'Texax', DATE('2014-01-01'))".\
+#	format(tn=cont_name, \
+#		cand=cand, cont=cont, int_cat=int_cat, emp=emp, amt=amt, c_s_z=c_s_z, dte=dte))
+#conn.commit()
+#conn.close()
 
 
 
 
 ## return db info
-%run db_info.py db.sqlite3 blog_contributordata
-%run db_info.py db.sqlite3 blog_candidatedata
+#%run db_info.py db.sqlite3 blog_contributordata
+#%run db_info.py db.sqlite3 blog_candidatedata
 
 ### select querys
-conn = sqlite3.connect(db_name)
-c = conn.cursor()
-c.execute('SELECT * FROM {tn}'.format(tn=cand_name))
-all_rows = c.fetchall()
-for i, rw in enumerate(all_rows):
-	print rw
-	if i % 50 == 0:
-		raw_input("Push enter to proceed")
+#conn = sqlite3.connect(db_name)
+#c = conn.cursor()
+#c.execute('SELECT * FROM {tn}'.format(tn=cand_name))
+#all_rows = c.fetchall()
+#for i, rw in enumerate(all_rows):
+#	print rw
+#	if i % 50 == 0:
+#		raw_input("Push enter to proceed")
 	
-conn.close()
+#conn.close()
 
 #returns tuple with
 ###(id, name, type, notnull, default_value, primary_key)
-c.execute('PRAGMA TABLE_INFO({})'.format(cont_name))
+#c.execute('PRAGMA TABLE_INFO({})'.format(cont_name))
 
-for tup in c.fetchall():
-	print tup[1] + ": " + tup[2] 
+#for tup in c.fetchall():
+#	print tup[1] + ": " + tup[2] 
 #names = [tup[1] for tup in c.fetchall()]
 #print names
-conn.close()
+#conn.close()
 
 ##
-conn = sqlite3.connect(db_name)
-c = conn.cursor()
-c.execute("DELETE FROM " + cand_name)
-conn.commit()
+#conn = sqlite3.connect(db_name)
+#c = conn.cursor()
+#c.execute("DELETE FROM " + cand_name)
+#conn.commit()
 ###conn.close()

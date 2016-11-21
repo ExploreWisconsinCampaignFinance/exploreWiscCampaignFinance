@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
 from django.core import serializers
@@ -6,6 +7,15 @@ from .models import Post, LegendData, ContribSourcesByParty, ContributorData, Ca
 from .forms import PostForm
 import json
 from datetime import date
+import datetime
+
+year_ranges = {
+  "2014": {"Begin":"2012-11-07", "End":"2014-11-04"},
+  "2015": {"Begin":"2014-11-05", "End":"2015-11-04"},
+  "2012": {"Begin":"2010-11-05", "End":"2012-11-06"},
+  "2013": {"Begin":"2012-11-07", "End":"2013-11-06"},
+  "2016": {"Begin":"2014-11-05", "End":"2016-11-01"}
+}
 
 def post_list(request):
 	posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
@@ -69,10 +79,17 @@ def test_retrieval(request):
 	return render(request, "blog/test_retrieval.html", {"retrieval": objs})
 	
 def contributor_data(request, cand, year):
-
-	if year == "2014":
-		frm_date = date(2012,11,6)
-		to_date = date(2014, 11, 4)
+	
+	## year_ranges = json.load(open(file_dates, 'rt'))
+	
+	frm_date = year_ranges[year]['Begin']
+	to_date = year_ranges[year]['End']
+	frm_date = datetime.datetime.strptime(frm_date, "%Y-%m-%d")
+	to_date = datetime.datetime.strptime(to_date, "%Y-%m-%d")
+	
+	#if year == "2016":
+	#	frm_date = date(2014,11,6)
+	#	to_date = date(2016, 11, 4)
 	
 	#cand += cand.replace(",", ", ")
 	qryst = ContributorData.objects.filter(
@@ -94,14 +111,23 @@ def contributor_data(request, cand, year):
 	return JsonResponse(data, safe=False)
 	
 def candidate_data(request, house, year):
-	info = "Received: " + year
-	qryst = CandidateData.objects.filter(
-		house=house
-	).filter(
-		year_ran__year=year
-	).order_by(
-	 	"year_ran"
-	)
+	info = year
+	## if the year is 1099 then all records returned, 
+	## done in order to pull all dates from records.
+	if date(int(year), 1, 1) != date(1099, 1, 1):
+		qryst = CandidateData.objects.filter(
+			house=house
+		).filter(
+			year_ran__year=year
+		).order_by(
+		 	"year_ran"
+		)
+	else:
+		qryst = CandidateData.objects.filter(
+			house=house
+		).order_by(
+		 	"year_ran"
+		)
 	data = list(qryst.values("candidate", "year_ran", "party", "house", "district", "won"))
 	return JsonResponse(data, safe=False)
 	
