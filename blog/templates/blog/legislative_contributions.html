@@ -5,11 +5,15 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="css/bootstrap.min.css" rel="stylesheet">
+    
+    <!---->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" /> 
+    
     
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.12/d3.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
+
+	<script src="{% static 'js/graph_setup_and_functions.js' %}"></script>
     <style>
 	    body{
 			font-family:sans-serif;
@@ -90,43 +94,80 @@
 		
     </style>
     <link rel="stylesheet" type="text/css" href="{% static 'css/colours.css' %}" />
-    <script>
-    
-		
-		
-    </script>
+    <title>Explore Campaign Finance</title>
 </head>
 <body>
-    <div id="timeseries"></div>
-    <div id="key"></div>
-    
-    <script>
-
-        //d3.json("{% url "legend_data" %}", draw);
-    </script>
-    <div style="border: black; font-size:12px; width:400px">
-    	
-    <p>
-		<input type="radio" name="house" id="house_asm" value="Assembly" checked> Assembly <br>
-		<input type="radio" name="house" id="house_sen" value="Senate"> Senate
-    </p>
-	Select year: <select id="sel_year">
-	</select> <br>
-	
-	Select district number <select id="sel_district">
-		<option>Select a District</option>
-	</select>
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Explore WI Campaign Finance</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
+              <ul class="dropdown-menu">
+                <li><a href="#">Action</a></li>
+                <li><a href="#">Another action</a></li>
+                <li><a href="#">Something else here</a></li>
+                <li role="separator" class="divider"></li>
+                <li class="dropdown-header">Nav header</li>
+                <li><a href="#">Separated link</a></li>
+                <li><a href="#">One more separated link</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+    <!--End nav bar -->
+    <!-- Begin page content -->
+    <div class="container">
+    	<div class="page-header">
+        <h1><br>Explore Contributions to the WI State Legislature</h1>
+      </div>
+      	<br>
+      	<br>
+		<div id="timeseries"></div>
+		<div id="key"></div>
+		
+		<div style="border: black; font-size:12px; width:400px">
+			
+			<p>
+				<input type="radio" name="house" id="house_asm" value="Assembly" checked> Assembly <br>
+				<input type="radio" name="house" id="house_sen" value="Senate"> Senate
+			</p>
+			Select year: <select id="sel_year"></select><br>
+			Select district number <select id="sel_district"><option>Select a District</option></select>
+		</div>
     </div>
+	<!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <p class="text-muted">
+        	All contribution data were collected from the Wisconsin Democracy Campaign
+        	and all information about who ran in which years was collected from Ballotopedia.
+        </p>
+      </div>
+    </footer>
 </body>
 </html>
 
-<script src="{% static 'js/graph_setup_and_functions.js' %}">
-</script>
+<script src="{% static 'js/graph_setup_and_functions.js' %}"></script>
+
+<script src="{% static 'js/loading_plotting_data.js' %}"></script>
 
 <script>
-	
-	
-
 	var cand_data;
 	var house = "Assembly";
 	var year = "2014";
@@ -138,7 +179,10 @@
 		check_house();
 	});
 	
+	// Check which house is checked.
+	// 	Grab available years.
 	var check_house = function(){
+		console.log("Checking house...");
 		if ($("#house_sen").is(':checked')){
 			house = "Senate";
 			//1099 to look for all records and pull years
@@ -159,36 +203,29 @@
 			});
 			$("#sel_year").html(years);
 		});		
-		console.log("House now equals: " + house);
-		
 	}
 	check_house();
+	
+	
+	// When year is changed
+	//	grab beginning and ending range of contr time
+	//	grab all the available districts
 	$("#sel_year").change(function() {
-		
-
 		
 		year = $(this).val();
 		if (year == "Select a year") {return null}
 		
-		//var tstdates = [];
 		$.getJSON("{% static 'js/year_ranges.json' %}", function(data){
 			$.each(data, function(i, fb) {
-		//		tstdates.push(fb);
-				if (year == i){
-					console.log("its this one");
-					console.log(fb["Begin"]);
-					console.log(fb["End"]);					
+
+				if (year == i){		
 					rescaleTime(fb["Begin"],fb["End"])
 				};
 
-				//console.log(i);
 			});
 		});
-		//console.log(tstdates);
-		
 		
 		var theurl = "/candidate_data/" + house + "/" + year;
-		console.log("gonna hit: " + theurl);
 	
 		var ajaxOpts = {
 			async: false,
@@ -209,117 +246,6 @@
 		$.ajax(theurl, ajaxOpts);
 		
 	});
-	
-	//var grabDistricts(yr)
-	
-	//this function should be fired on selection of year.
-	//With the years being populated when the house radio button is changed.
-	//$.getJSON("{% url 'candidate_data' 'Assembly' '2014' %}", function(json) {
-	
-	//	cand_data = json;
-	//	var p_opts = '<option>';
-	//	var s_opts = '</option>';
-	//	//var years = "";
-	//	var dists = p_opts + "Select a District" + s_opts;
-	//	$.each(json, function (i, fb) {
-	//		var dist_opt = p_opts + fb.district + s_opts;
-	//		//var year_opt = p_opts + fb.year_ran.substring(0, 4) + s_opts;
-	//		if (dists.indexOf(dist_opt) < 0){ dists += dist_opt; }
-	//		//if (years.indexOf(year_opt) < 0){ years += year_opt; }
-	//	});
-	//	$("#sel_district").html(dists);
-	//	//$("#sel_year").html(years);
-
-	//})
-
-	$("#sel_district").change(function() {
-		var cont_data = [];
-		var maxVal = 0;
-		if ($(this).val() == "Select a District") {return }
-		//Remember to remove the previous graph		
-		$('.timeseries.drawnTimeSeries').remove();
-		$('.key_line').remove();
-		
-		var distNum = $(this).val();
-		//constructing the data for the legend
-		var leg_data = [];
-		
-		//Go through each candidate who ran
-		//	searching for the matching district 
-		$.each(cand_data, function(i, fb) {
-			if (fb.district != distNum){
-				return;
-			}
-			console.log(fb.candidate)
-			if (fb.candidate == "None, None"){ 
-				return; 
-			}
-			//Collect campaign data for who won, party, etc
-			var splt = fb.candidate.split(",");
-			var obj = {};
-			//Break into key name and display name
-			obj["line_id"] = fb.candidate;
-			obj["line_name"] = splt[splt.length-1] + " " + splt[0];
-			obj["party"] = fb.party.replace(" ", "");
-			obj["won"] = fb.won;
-			leg_data.push(obj);
-		})
-		//Collect contributor data from url and store it
-		for (var i=0; i<leg_data.length; i++){
-			var cand_name = leg_data[i].line_id
-			var theurl = "/contributor_data/" + cand_name + "/" + year;
-			console.log("The url for contribu data: " + theurl);
-			var jsonOutData;
-			
-			var ajaxOpts = {
-				async: false,
-				dataType: "json",
-				success: function(data) { jsonOutData = data; }
-			};
-			
-			$.ajax(theurl, ajaxOpts);
-			
-			cont_data.push(jsonOutData)
-		}
-		console.log("Max val is " + findMaxVal(cont_data));
-
-		rescale(findMaxVal(cont_data))
-		for (var i=0; i<leg_data.length; i++){
-		
-			draw_timeseries(cont_data[i], 'drawnTimeSeries', leg_data[i].party)
-		
-		}
-		// drawing the key
-		
-		var key_items = d3.select('#key')
-		  .selectAll('div')
-		  .data(leg_data)
-		  .enter()
-		  .append('div')
-			.attr('class','key_line')
-			.attr('id',function(d){return d.line_id+"_key"})
-
-		key_items.append('div')
-			.attr('id', function(d){return 'key_square_' + d.line_id})
-			.attr('class', function(d){return 'key_square ' + d.line_id + " " + d.party})
-
-		key_items.append('div')
-			.attr('class','key_label')
-			.text(function(d){
-				if (d.won == 1){
-					return d.line_name + "*"
-				} else {
-					return d.line_name
-				}
-			})
-	
-
-	})
-	
-
-
 </script>
-
-
 
 

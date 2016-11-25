@@ -2,6 +2,8 @@ from django.conf.urls import url, include
 from . import views
 
 urlpatterns = [
+	url(r'^$', views.legislative_contributions, name="legislative_contributions"),
+	url(r'^legislative_contributions$', views.legislative_contributions, name="legislative_contributions"),
     url(r'^post_index$', views.post_list, name='post_list'),
     url(r'^post/(?P<pk>[0-9]+)/$', views.post_detail, name='post_detail'),
     url(r'^post/new/$', views.post_new, name='post_new'),
@@ -16,7 +18,6 @@ urlpatterns = [
     url(r'^contributor_data/(?P<cand>(\w+\s?\w*,\s\w+\s?\w?\s?\w{1,}))/(?P<year>[0-9]+)', views.contributor_data, name="contributor_data"),
     url(r'^candidate_data/(?P<house>(\w)+)/(?P<year>[0-9]+)', views.candidate_data, name="candidate_data"),
     url(r'^index$', views.index, name="index"),
-    url(r'^legislative_contributions$', views.legislative_contributions, name="legislative_contributions"),
 	url(r'^test_contrib$', views.test_contrib, name="test_contrib")
     #url(r'^contributor_data', views.contributor_data, name="contributor_data")
 ]
