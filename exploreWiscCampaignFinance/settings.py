@@ -25,7 +25,7 @@ SECRET_KEY = 'w&7$iu==a-j6=)#o&ex_rm8a8=kckaap=-c7!o-(fg6h9-hym6'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [u'reroute53.pythonanywhere.com']
 
 
 # Application definition
