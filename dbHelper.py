@@ -1,7 +1,7 @@
 import os
 import sqlite3
-os.chdir(os.path.expanduser("~") + \
-	"/Documents/exploreWiscCampaignFinance")
+#os.chdir(os.path.expanduser("~") + \
+#	"/Documents/exploreWiscCampaignFinance")
 
 db_name = "db.sqlite3"
 conn = sqlite3.connect(db_name)
@@ -22,8 +22,7 @@ id_fld = "id"
 cum = "cumulative"
 
 cont_name = "blog_contributordata"
-cont_data = os.path.expanduser("~") + \
-	"/Documents/campaign_finance/raw_data/contribution_data.tsv"
+cont_data = "contribution_data.tsv"
 
 #returns tuple with
 ###(id, name, type, notnull, default_value, primary_key)
@@ -80,8 +79,7 @@ party = "party" # models.CharField(max_length=200)
 year = "year_ran" # models.DateField(null=True)
 won = "won" # models.IntegerField()
 
-cand_data = os.path.expanduser("~") + \
-	"/Documents/campaign_finance/raw_data/candidate_data.tsv"
+cand_data = "candidate_data.tsv"
 
 f = open(cand_data, "rb")
 field_string = "INSERT INTO {tn} ('{hous}', '{dist}', '{party}', '{won}', '{year}', '{cand}') VALUES "
