@@ -133,7 +133,15 @@ def candidate_data(request, house, year):
 	
 def index(request):
 	return render(request, "blog/index.html", {})
-	
+
+def about(request):
+	return render(request, "blog/about.html", {})
+
+def contact(request):
+	return render(request, "blog/contact.html", {})	
+
+def home(request):
+	return render(request, "blog/home.html", {})		
 	
 def legislative_contributions(request):
 	return render(request, "blog/legislative_contributions.html", {})

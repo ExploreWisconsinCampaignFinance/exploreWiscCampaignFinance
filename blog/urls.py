@@ -4,6 +4,9 @@ from . import views
 urlpatterns = [
 	url(r'^$', views.legislative_contributions, name="legislative_contributions"),
 	url(r'^legislative_contributions$', views.legislative_contributions, name="legislative_contributions"),
+	url(r'^about$', views.about, name="about"),
+	url(r'^contact$', views.contact, name="contact"),
+	url(r'^home$', views.home, name="home"),			
     url(r'^post_index$', views.post_list, name='post_list'),
     url(r'^post/(?P<pk>[0-9]+)/$', views.post_detail, name='post_detail'),
     url(r'^post/new/$', views.post_new, name='post_new'),
